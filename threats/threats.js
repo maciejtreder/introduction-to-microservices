@@ -60,5 +60,7 @@ app.post('/assignment', (req, res) => {
 
 app.use('/img', express.static(path.join(__dirname,'img')));
 
+require('../eureka-helper/eureka-helper').registerWithEureka('threats-service', port);
+
 console.log(`Threats service listening on port ${port}`);
 app.listen(port);

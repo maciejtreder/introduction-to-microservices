@@ -79,5 +79,7 @@ app.post('/hero/**', (req, res) => {
 
 app.use('/img', express.static(path.join(__dirname,'img')));
 
+require('../eureka-helper/eureka-helper').registerWithEureka('heroes-service', port);
+
 console.log(`Heroes service listening on port ${port}`);
 app.listen(port);
