@@ -8,7 +8,7 @@ const app = express();
 
 app.use(bodyParser.json());
 
-const heroesService = 'http://localhost:8081';
+const heroesService = 'http://localhost:8080/heroes-service';
 
 const threats = [
    {
