@@ -37,7 +37,7 @@ app.post('/auth', async (req, res) => {
    console.log(`Auth: Authorizing user: ${userId}`);
    const user = await retrieveUser(userId, password);
    if (!user) {
-       res.status(403).send('Access Denied.');
+       res.status(401).send('Unauthorized.');
        return;
    }
    let token;

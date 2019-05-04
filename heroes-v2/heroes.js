@@ -7,6 +7,10 @@ const port = process.argv.slice(2)[0];
 const app = express();
 app.use(bodyParser.json());
 
+const fs = require('fs');
+const jwt = require('jsonwebtoken');
+const publicKey = fs.readFileSync(path.join(__dirname,'../public.key'));
+
 
 const dbUrl = 'Your connection string URL goes here.';
 
@@ -24,6 +28,42 @@ function retrieveFromDb(collectionName) {
    });
 }
 
+app.post('/hero', (req, res) => {
+    console.log(`Heroes v2: Adding new hero`);
+    console.log(req.body);
+    const token = req.headers.auth;
+    try {
+        var decoded = jwt.verify(token, publicKey);
+        console.log(`Heroes v2: Token decoded, privileges:`);
+        console.log(decoded.privileges);
+        if(decoded.privileges.indexOf('CREATE_HERO') > 0) {
+            const heroCollection = dbClient.db('test').collection('heroes');
+            heroCollection.find().sort({id:-1}).limit(1).next().then(result => {
+                const lastId = result.id;
+                const newHero = {
+                    id: lastId + 1,
+                    type: req.body.type,
+                    displayName: req.body.displayName,
+                    powers: req.body.powers,
+                    img: req.body.img,
+                    busy: false
+                };
+                heroCollection.insertOne(newHero);
+                res.status(201).send(newHero);
+            });
+        } else {
+            
+            console.log('Requesting user does not have the CREATE_HERO privilege.');
+            console.log('Heroes v2: Lack of the CREATE_HERO privilege.');
+            res.status(403).send('Access Denied.');   
+        }
+    } catch(error) {
+        console.log(error);
+        res.status(401).send('Unauthorized.');
+    }
+ });
+ 
+
 app.get('/heroes', (req, res) => {
  console.log('Heroes v2: Returning heroes list.');
  retrieveFromDb('heroes').then(heroes => res.send(heroes));
@@ -35,6 +75,24 @@ app.get('/powers', (req, res) => {
 });
 
 app.post('/hero/**', (req, res) => {
+    const token = req.headers.auth;
+ 
+    try {
+        var decoded = jwt.verify(token, publicKey);
+        console.log(`Heroes v2: Token decoded, privileges:`);
+        console.log(decoded.privileges);
+        if(!(decoded.privileges.indexOf('ASSIGN_HERO') >= 0)) {
+            console.log('Heroes v2: Lack of the ASSIGN_HERO privilege.');
+            console.log('Requesting user does not have the ASSIGN_HERO privilege.');
+            res.status(403).send('Access Denied.');
+            return;
+        }
+    } catch(error) {
+        console.log(error);
+        res.status(401).send('Unauthorized.');
+        return;
+    }
+ 
     const heroId = parseInt(req.params[0]);
     console.log('Heroes v2: Updating hero: ' + heroId);
     const heroCollection = dbClient.db('test').collection('heroes');

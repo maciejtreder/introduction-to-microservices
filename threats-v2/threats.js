@@ -31,7 +31,7 @@ app.post('/assignment', (req, res) => {
     const threatsCollection = dbClient.db('test').collection('threats');
     
     request.post({
-        headers: {'content-type': 'application/json'},
+        headers: {'content-type': 'application/json', 'auth': req.headers.auth},
         url: `${heroesService}/hero/${req.body.heroId}`,
         body: `{
             "busy": true
